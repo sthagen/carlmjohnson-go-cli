@@ -8,3 +8,4 @@ To use this template to create a Go CLI:
 2. Clone your new repo locally.
 3. Change directory into initproj and run `go run .`. Follow prompts to customize your project.
 4. Commit initial changes and start work on your app.
+ 
