@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/carlmjohnson/flagext"
-	"github.com/peterbourgon/ff/v3"
 )
 
 const AppName = "go-cli"
@@ -16,10 +15,10 @@ const AppName = "go-cli"
 func CLI(args []string) error {
 	var app appEnv
 	err := app.ParseArgs(args)
-	if err == nil {
-		err = app.Exec()
-	}
 	if err != nil {
+		return err
+	}
+	if err = app.Exec(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 	return err
@@ -31,12 +30,8 @@ func (app *appEnv) ParseArgs(args []string) error {
 	app.src = src
 	fl.Var(src, "src", "source file or URL")
 	app.Logger = log.New(nil, AppName+" ", log.LstdFlags)
-	fl.Var(
-		flagext.Logger(app.Logger, flagext.LogVerbose),
-		"verbose",
-		`log debug output`,
-	)
-
+	flagext.LoggerVar(
+		fl, app.Logger, "verbose", flagext.LogVerbose, "log debug output")
 	fl.Usage = func() {
 		fmt.Fprintf(fl.Output(), `go-cli - a Go CLI application template cat clone
 
@@ -49,7 +44,10 @@ Options:
 		fl.PrintDefaults()
 		fmt.Fprintln(fl.Output(), "")
 	}
-	if err := ff.Parse(fl, args, ff.WithEnvVarPrefix("GO_CLI")); err != nil {
+	if err := fl.Parse(args); err != nil {
+		return err
+	}
+	if err := flagext.ParseEnv(fl, AppName); err != nil {
 		return err
 	}
 	return nil
